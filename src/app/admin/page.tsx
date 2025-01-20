@@ -44,25 +44,28 @@ const TableComponent = () => {
   const handleQuantityChange = async (index: number, change: number) => {
     const updatedProducts = [...products];
     const updatedProduct = updatedProducts[index];
-    const newQuantity = Math.max(updatedProduct.quantity + change, 1);
-    updatedProduct.quantity = newQuantity;
-
-    // تحديث الكمية في الـ API
+  
+    // التأكد من أن الكمية لا تقل عن 1
+    const newQuantity = Math.max(updatedProduct.quantity + change, 0);
+  
     try {
-      const response = await fetch("http://localhost:3000/api/products", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...updatedProduct,
-        }),
-      });
-
+      // تحديد نوع الإجراء (زيادة أو تقليص)
+      const action = change > 0 ? "increment" : "decrement";
+  
+      // إرسال الطلب إلى الـ API
+      const response = await fetch(
+        `http://localhost:3000/api/products?id=${updatedProduct.id}&action=${action}`,
+        {
+          method: "PATCH",
+        }
+      );
+  
       if (!response.ok) {
         throw new Error("Failed to update product quantity");
       }
-
+  
+      // تحديث الكمية محليًا إذا نجحت العملية
+      updatedProduct.quantity = newQuantity;
       setProducts(updatedProducts);
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -72,7 +75,7 @@ const TableComponent = () => {
       }
     }
   };
-
+  
   const handleRemoveProduct = async (index: number) => {
     const productToRemove = products[index];
 

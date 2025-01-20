@@ -125,14 +125,16 @@ export async function DELETE(request: Request) {
 }
 
 
-export async function PATCH_INCREMENT(request: Request) {
+// دالة PATCH لتحديث الكمية
+export async function PATCH(request: Request) {
   const url = new URL(request.url);
   const id = parseInt(url.searchParams.get("id") as string);
+  const action = url.searchParams.get("action"); // "increment" أو "decrement"
 
-  // التحقق من وجود ID لزيادة الكمية
-  if (!id) {
+  // التحقق من وجود ID والإجراء
+  if (!id || !action) {
     return NextResponse.json(
-      { error: "Product ID is required for increment" },
+      { error: "Product ID and action (increment/decrement) are required" },
       { status: 400 }
     );
   }
@@ -146,40 +148,21 @@ export async function PATCH_INCREMENT(request: Request) {
     );
   }
 
-  // زيادة الكمية
-  products[productIndex].quantity += 1;
-
-  return NextResponse.json(products[productIndex]);
-}
-
-// تقليص كمية المنتج (PATCH)
-export async function PATCH_DECREMENT(request: Request) {
-  const url = new URL(request.url);
-  const id = parseInt(url.searchParams.get("id") as string);
-
-  // التحقق من وجود ID لتقليص الكمية
-  if (!id) {
-    return NextResponse.json(
-      { error: "Product ID is required for decrement" },
-      { status: 400 }
-    );
-  }
-
-  const productIndex = products.findIndex((p) => p.id === id);
-
-  if (productIndex === -1) {
-    return NextResponse.json(
-      { error: "Product not found" },
-      { status: 404 }
-    );
-  }
-
-  // تقليص الكمية إذا كانت الكمية أكبر من 0
-  if (products[productIndex].quantity > 0) {
-    products[productIndex].quantity -= 1;
+  // تنفيذ الإجراء
+  if (action === "increment") {
+    products[productIndex].quantity += 1;
+  } else if (action === "decrement") {
+    if (products[productIndex].quantity > 0) {
+      products[productIndex].quantity -= 1;
+    } else {
+      return NextResponse.json(
+        { error: "Quantity cannot be less than 0" },
+        { status: 400 }
+      );
+    }
   } else {
     return NextResponse.json(
-      { error: "Quantity cannot be less than 0" },
+      { error: "Invalid action. Use 'increment' or 'decrement'" },
       { status: 400 }
     );
   }
