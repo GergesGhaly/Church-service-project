@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import AddProduct from "../addProduct";
+import AddProduct from "../AddProduct";
 
 interface Product {
   id: number; // إضافة id للمنتج
