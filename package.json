@@ -12,7 +12,8 @@
     "my-next-tailwind-ts-app": "file:",
     "next": "15.1.5",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-select": "^5.10.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

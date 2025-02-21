@@ -1,11 +1,24 @@
-import { useState, useRef } from "react";
+"use client";
+import React, { useState, useEffect, useRef } from "react";
 
-interface AddProductProps {
-  setIsModalOpen: (isOpen: boolean) => void;
+interface Product {
+  id: number;
+  name: string;
+  quantity: number;
+  imagePath: string;
+}
+
+interface UpdateProductProps {
+  productId: number;
+  setIsUpdateModalOpen: (isOpen: boolean) => void;
   fetchProducts: () => Promise<void>;
 }
 
-const AddProduct: React.FC<AddProductProps> = ({ setIsModalOpen, fetchProducts }) => {
+const UpdateProduct: React.FC<UpdateProductProps> = ({
+  productId,
+  setIsUpdateModalOpen,
+  fetchProducts,
+}) => {
   const [productName, setProductName] = useState<string>("");
   const [productQuantity, setProductQuantity] = useState<number | "">("");
   const [productImage, setProductImage] = useState<File | null>(null);
@@ -14,58 +27,94 @@ const AddProduct: React.FC<AddProductProps> = ({ setIsModalOpen, fetchProducts }
   const [message, setMessage] = useState<string | null>(null);
   const inputFileRef = useRef<HTMLInputElement | null>(null); // مرجع لحقل اختيار الصورة
 
+  // Fetch product data
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/Material/${productId}`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch product");
+        }
+        const data: Product = await response.json();
+        setProductName(data.name);
+        setProductQuantity(data.quantity);
+        setPreviewURL(data.imagePath); // عرض الصورة الحالية
+      } catch (err) {
+        setMessage(err instanceof Error ? err.message : "An unknown error occurred.");
+      }
+    };
+
+    fetchProduct();
+  }, [productId]);
+
+  // Handle image change
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setProductImage(file);
-      setPreviewURL(URL.createObjectURL(file));
+      console.log(file)
+      setPreviewURL(URL.createObjectURL(file)); // تحديث المعاينة
     }
   };
 
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
-
+  
     const formData = new FormData();
+    formData.append("id", productId.toString()); // إضافة الـ ID
     formData.append("name", productName);
     formData.append("quantity", productQuantity.toString());
     if (productImage) {
       formData.append("imageFile", productImage);
     }
-
+  
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Material`, {
-        method: "POST",
-        body: formData,
-      });
-
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/Material/${productId}`,
+        {
+          method: "PUT",
+          body: formData,
+        }
+      );
+  
       if (!response.ok) {
-        throw new Error("Failed to add product");
+        throw new Error("Failed to update product");
       }
-
-      setMessage("Product added successfully! ✅");
-      setProductName("");
-      setProductQuantity("");
-      setProductImage(null);
-      setPreviewURL(null);
-
+  
+      setMessage("Product updated successfully! ✅");
+      await fetchProducts();
+  
       if (inputFileRef.current) {
         inputFileRef.current.value = ""; // حذف قيمة حقل اختيار الصورة
       }
-
-      await fetchProducts();
+  
+      setIsUpdateModalOpen(false);
     } catch (err) {
-      setMessage("Error adding product ❌" + err);
+      setMessage(
+        "Error updating product ❌: " +
+          (err instanceof Error ? err.message : "An unknown error occurred.")
+      );
     } finally {
       setLoading(false);
     }
+  
+    for (const pair of formData.entries()) {
+      console.log("look here ! " + pair[0], pair[1]);
+    }
   };
+  
+  
+  
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-black p-6 rounded-lg shadow-lg w-96">
-        <h2 className="text-white text-lg font-bold mb-4">Add New Product</h2>
+        <h2 className="text-white text-lg font-bold mb-4">Update Product</h2>
         {message && (
           <p className={`mb-4 text-sm ${message.includes("✅") ? "text-green-500" : "text-red-500"}`}>
             {message}
@@ -102,7 +151,6 @@ const AddProduct: React.FC<AddProductProps> = ({ setIsModalOpen, fetchProducts }
               className="w-full border border-gray-300 rounded-lg p-2 bg-white"
               accept="image/*"
               onChange={handleImageChange}
-              required
             />
             {previewURL && (
               <div className="mt-2">
@@ -115,7 +163,7 @@ const AddProduct: React.FC<AddProductProps> = ({ setIsModalOpen, fetchProducts }
             <button
               type="button"
               className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg mr-2"
-              onClick={() => setIsModalOpen(false)}
+              onClick={() => setIsUpdateModalOpen(false)}
             >
               Cancel
             </button>
@@ -124,7 +172,7 @@ const AddProduct: React.FC<AddProductProps> = ({ setIsModalOpen, fetchProducts }
               className="px-4 py-2 bg-blue-500 text-white rounded-lg"
               disabled={loading}
             >
-              {loading ? "Saving..." : "Save"}
+              {loading ? "Updating..." : "Update"}
             </button>
           </div>
         </form>
@@ -133,4 +181,4 @@ const AddProduct: React.FC<AddProductProps> = ({ setIsModalOpen, fetchProducts }
   );
 };
 
-export default AddProduct;
+export default UpdateProduct;

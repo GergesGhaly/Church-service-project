@@ -1,14 +1,26 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import Select from "react-select";
+import InvoiceComponent from "./InvoiceComponent";
+
+interface Customer {
+  id: string;
+  name: string;
+}
 
 // تعريف نوع المنتج
 interface Product {
   id: number;
   name: string;
-  price: number;
+  sellPrice: number;
   quantity: number;
-  image: string;
+  imagePath: string;
+}
+
+interface Exhibition {
+  id: number;
+  name: string;
 }
 
 // تعريف نوع المنتج داخل السلة
@@ -21,34 +33,83 @@ export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [customerName, setCustomerName] = useState<string>("");
+  const [customerID, setCustomerID] = useState<string>("");
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [selectedExhibition, setSelectedExhibition] = useState<string>("");
+  const [selectedExhibitionId, setSelectedExhibitionID] = useState<number | null>(null);
+  const [exhibitions, setExhibitions] = useState<Exhibition[]>([]);
 
   // حالة السلة
   const [cart, setCart] = useState<CartItem[]>([]);
 
-  // جلب البيانات من API
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch("http://localhost:3000/api/products");
-        if (!response.ok) {
-          throw new Error("Failed to fetch products");
-        }
-        const data: Product[] = await response.json();
-        setProducts(data);
-      } catch (err: unknown) {
-        if (err instanceof Error) {
-          setError(err.message); // إذا كان الخطأ من النوع Error
-        } else {
-          setError("An unknown error occurred."); // في حال كان الخطأ من نوع غير معروف
-        }
-      } finally {
-        setLoading(false);
+  //fetchCustomers
+  const fetchCustomers = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/Customers`
+      );
+      if (!response.ok) throw new Error("Failed to fetch customers");
+      const data: Customer[] = await response.json();
+      setCustomers(data);
+    } catch (err) {
+      console.error("Error fetching customers:", err);
+    }
+  };
+  const fetchExhibition = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/Gallery`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch Exhibition");
       }
-    };
+      const data: Product[] = await response.json();
+      setExhibitions(data);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message); // إذا كان الخطأ من النوع Error
+      } else {
+        setError("An unknown error occurred."); // في حال كان الخطأ من نوع غير معروف
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+  // جلب البيانات من API
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/Material`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch products");
+      }
+      const data: Product[] = await response.json();
+      setProducts(data);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message); // إذا كان الخطأ من النوع Error
+      } else {
+        setError("An unknown error occurred."); // في حال كان الخطأ من نوع غير معروف
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
+    fetchCustomers();
+    fetchExhibition();
     fetchProducts();
   }, []);
+
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   // وظيفة إضافة المنتج إلى السلة
   const handleAddToCart = (productId: number) => {
@@ -101,60 +162,130 @@ export default function Home() {
   };
 
   // وظيفة الطباعة
-  const handlePrint = () => {
-    const totalPrice = cart.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
-    const cartDetails = cart
-      .map((item) => `${item.name} - $${item.price} x ${item.quantity}`)
-      .join("\n");
-    const printContent = `Cart Items:\n${cartDetails}\n\nTotal Price: $${totalPrice}`;
-    const printWindow = window.open("", "_blank");
-    if (printWindow) {
-      printWindow.document.write(`<pre>${printContent}</pre>`);
-      printWindow.document.close();
-      printWindow.print();
-    }
-  };
+  // const handlePrint = () => {
+  //   if (typeof window === "undefined") return; // تأكد من أن window متاح فقط في المتصفح
+
+  //   const galleryName = selectedExhibition;
+  //   const totalPrice = cart.reduce(
+  //     (sum, item) => sum + item.sellPrice * item.quantity,
+  //     0
+  //   );
+  //   const cartDetails = cart
+  //     .map((item) => `${item.name} - $${item.sellPrice} x ${item.quantity}`)
+  //     .join("\n");
+
+  //   const printContent = `Gallery: ${galleryName}\nCustomer: ${
+  //     customerName || "Not Selected"
+  //   }\n\nCart Items:\n${cartDetails}\n\nTotal Price: $${totalPrice}`;
+
+  //   const printWindow = window.open("", "_blank");
+  //   if (printWindow) {
+  //     printWindow.document.write(`<pre>${printContent}</pre>`);
+  //     printWindow.document.close();
+  //     printWindow.print();
+  //   }
+  // };
 
   return (
-    <div className="grid items-start justify-items-center min-h-screen  pb-20 gap-8 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-        <Link
+    <div className="grid items-start justify-items-center min-h-screen  pb-20 gap-4 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+      <Link
         href={"/admin"}
-              className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-300 ease-in-out justify-self-end"
-             
-            >
-            Admin
-            </Link>
+        className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-300 ease-in-out justify-self-end"
+      >
+        Admin
+      </Link>
+      <h1 className="text-2xl font-bold">Info</h1>
+      <div className="flex justify-center gap-4 items-center">
+        <Select
+          options={customers?.map((customer) => ({
+            value: customer.name,
+            label: customer.name,
+            id: customer.id,
+          }))}
+          formatOptionLabel={(option) => (
+            <div className="flex flex-col">
+              <span className="font-semibold">{option.label}</span>
+              <span className="text-gray-500 text-sm">{option.id}</span>
+            </div>
+          )}
+          isSearchable
+          placeholder="Select Customer Name"
+          onChange={(selectedOption) => {
+            setCustomerName(selectedOption?.value || "");
+            setCustomerID(selectedOption?.id || "");
+          }}
+          className="text-black"
+        />
+        {/* //Exhibition */}
+        <Select
+          options={exhibitions?.map((exhibition) => ({
+            value: exhibition.name,
+            label: exhibition.name,
+            id: exhibition.id,
+          }))}
+          formatOptionLabel={(option) => (
+            <div className="flex flex-col">
+              <span className="font-semibold">{option.label}</span>
+              {/* <span className="text-gray-500 text-sm">{option.id}</span> */}
+            </div>
+          )}
+          isSearchable
+          placeholder="Select Exhibition Name"
+          onChange={(selectedOption) =>{
+            
+            setSelectedExhibition(selectedOption?.value || "")
+            setSelectedExhibitionID(selectedOption?.id || null)
+            
+          }
+          }
+          className="text-black"
+        />
+      </div>
       <h1 className="text-2xl font-bold">Products</h1>
-
+      <input
+        type="text"
+        placeholder="Search products..."
+        className="border rounded-lg p-2 w-full max-w-md"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
       {loading ? (
         <p>Loading products...</p>
       ) : error ? (
         <p className="text-red-500">Error: {error}</p>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-          {products.map((product) => (
+          {filteredProducts.map((product) => (
             <div
               key={product.id}
               className="border rounded-lg p-4 shadow-md flex flex-col items-center text-center"
             >
               <img
-                src={product.image}
+                src={product.imagePath}
                 alt={product.name}
                 className="w-32 h-32 object-cover mb-4"
               />
               <h2 className="text-lg font-semibold">{product.name}</h2>
-              <p className="text-gray-600">Price: ${product.price}</p>
-              <p className="text-gray-600">
+              <p
+                className={`${
+                  product.sellPrice === 0 ? "text-red-500" : "text-gray-600"
+                }`}
+              >
+                Price:
+                {product.sellPrice === 0 ? "اضف سعر" : "$" + product.sellPrice}
+              </p>
+              <p
+                className={
+                  product.quantity === 0 ? "text-red-500" : "text-gray-600"
+                }
+              >
                 Quantity:{" "}
                 {product.quantity > 0 ? product.quantity : "Out of Stock"}
               </p>
               <button
                 className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400"
                 onClick={() => handleAddToCart(product.id)}
-                disabled={product.quantity === 0}
+                disabled={product.quantity <= 0 || product.sellPrice === 0}
               >
                 Add to Cart
               </button>
@@ -163,39 +294,17 @@ export default function Home() {
         </div>
       )}
 
-      <h1 className="text-2xl font-bold mt-10">Cart</h1>
-      <div className="w-full max-w-2xl text-center">
-        {cart.length > 0 ? (
-          <div className="grid gap-4">
-            {cart.map((item) => (
-              <div
-                key={item.id}
-                className="border rounded-lg p-4 shadow-sm flex justify-between items-center"
-              >
-                <div>
-                  <h2 className="text-lg font-semibold">{item.name}</h2>
-                  <p className="text-gray-600">Price: ${item.price}</p>
-                  <p className="text-gray-600">Quantity: {item.quantity}</p>
-                </div>
-                <button
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                  onClick={() => handleRemoveFromCart(item.id)}
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-            <button
-              className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 w-full"
-              onClick={handlePrint}
-            >
-              Print Cart
-            </button>
-          </div>
-        ) : (
-          <p>Your cart is empty.</p>
-        )}
-      </div>
+      {/* Cart */}
+      <InvoiceComponent
+        cart={cart}
+        customerID={customerID}
+        selectedExhibition={selectedExhibition}
+        handleRemoveFromCart={handleRemoveFromCart}
+        selectedExhibitionId={selectedExhibitionId}
+        customerName={customerName}
+        // handlePrint={handlePrint}
+      />
+    
     </div>
   );
 }
