@@ -1,13 +1,13 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import Select from "react-select";
+// import Select from "react-select";
 import InvoiceComponent from "./InvoiceComponent";
 
-interface Customer {
-  id: string;
-  name: string;
-}
+// interface Customer {
+//   id: string;
+//   name: string;
+// }
 
 // تعريف نوع المنتج
 interface Product {
@@ -18,10 +18,10 @@ interface Product {
   imagePath: string;
 }
 
-interface Exhibition {
-  id: number;
-  name: string;
-}
+// interface Exhibition {
+//   id: number;
+//   name: string;
+// }
 
 // تعريف نوع المنتج داخل السلة
 interface CartItem extends Product {
@@ -34,50 +34,50 @@ export default function Home() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [customerName, setCustomerName] = useState<string>("");
-  const [customerID, setCustomerID] = useState<string>("");
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [selectedExhibition, setSelectedExhibition] = useState<string>("");
-  const [selectedExhibitionId, setSelectedExhibitionID] = useState<number | null>(null);
-  const [exhibitions, setExhibitions] = useState<Exhibition[]>([]);
+  // const [customerName, setCustomerName] = useState<string>("");
+  // const [customerID, setCustomerID] = useState<string>("");
+  // const [customers, setCustomers] = useState<Customer[]>([]);
+  // const [, setSelectedExhibition] = useState<string>("");
+  // const [, setSelectedExhibitionID] = useState<number | null>(null);
+  // const [exhibitions, setExhibitions] = useState<Exhibition[]>([]);
 
   // حالة السلة
   const [cart, setCart] = useState<CartItem[]>([]);
 
   //fetchCustomers
-  const fetchCustomers = async () => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/Customers`
-      );
-      if (!response.ok) throw new Error("Failed to fetch customers");
-      const data: Customer[] = await response.json();
-      setCustomers(data);
-    } catch (err) {
-      console.error("Error fetching customers:", err);
-    }
-  };
-  const fetchExhibition = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/Gallery`
-      );
-      if (!response.ok) {
-        throw new Error("Failed to fetch Exhibition");
-      }
-      const data: Product[] = await response.json();
-      setExhibitions(data);
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message); // إذا كان الخطأ من النوع Error
-      } else {
-        setError("An unknown error occurred."); // في حال كان الخطأ من نوع غير معروف
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const fetchCustomers = async () => {
+  //   try {
+  //     const response = await fetch(
+  //       `${process.env.NEXT_PUBLIC_API_URL}/Customers`
+  //     );
+  //     if (!response.ok) throw new Error("Failed to fetch customers");
+  //     const data: Customer[] = await response.json();
+  //     setCustomers(data);
+  //   } catch (err) {
+  //     console.error("Error fetching customers:", err);
+  //   }
+  // };
+  // const fetchExhibition = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const response = await fetch(
+  //       `${process.env.NEXT_PUBLIC_API_URL}/Gallery`
+  //     );
+  //     if (!response.ok) {
+  //       throw new Error("Failed to fetch Exhibition");
+  //     }
+  //     const data: Product[] = await response.json();
+  //     setExhibitions(data);
+  //   } catch (err: unknown) {
+  //     if (err instanceof Error) {
+  //       setError(err.message); // إذا كان الخطأ من النوع Error
+  //     } else {
+  //       setError("An unknown error occurred."); // في حال كان الخطأ من نوع غير معروف
+  //     }
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   // جلب البيانات من API
   const fetchProducts = async () => {
     try {
@@ -102,8 +102,8 @@ export default function Home() {
   };
 
   useEffect(() => {
-    fetchCustomers();
-    fetchExhibition();
+    // fetchCustomers();
+    // fetchExhibition();
     fetchProducts();
   }, []);
 
@@ -194,53 +194,6 @@ export default function Home() {
       >
         Admin
       </Link>
-      <h1 className="text-2xl font-bold">Info</h1>
-      <div className="flex justify-center gap-4 items-center">
-        <Select
-          options={customers?.map((customer) => ({
-            value: customer.name,
-            label: customer.name,
-            id: customer.id,
-          }))}
-          formatOptionLabel={(option) => (
-            <div className="flex flex-col">
-              <span className="font-semibold">{option.label}</span>
-              <span className="text-gray-500 text-sm">{option.id}</span>
-            </div>
-          )}
-          isSearchable
-          placeholder="Select Customer Name"
-          onChange={(selectedOption) => {
-            setCustomerName(selectedOption?.value || "");
-            setCustomerID(selectedOption?.id || "");
-          }}
-          className="text-black"
-        />
-        {/* //Exhibition */}
-        <Select
-          options={exhibitions?.map((exhibition) => ({
-            value: exhibition.name,
-            label: exhibition.name,
-            id: exhibition.id,
-          }))}
-          formatOptionLabel={(option) => (
-            <div className="flex flex-col">
-              <span className="font-semibold">{option.label}</span>
-              {/* <span className="text-gray-500 text-sm">{option.id}</span> */}
-            </div>
-          )}
-          isSearchable
-          placeholder="Select Exhibition Name"
-          onChange={(selectedOption) =>{
-            
-            setSelectedExhibition(selectedOption?.value || "")
-            setSelectedExhibitionID(selectedOption?.id || null)
-            
-          }
-          }
-          className="text-black"
-        />
-      </div>
       <h1 className="text-2xl font-bold">Products</h1>
       <input
         type="text"
@@ -297,11 +250,11 @@ export default function Home() {
       {/* Cart */}
       <InvoiceComponent
         cart={cart}
-        customerID={customerID}
-        selectedExhibition={selectedExhibition}
+        // customerID={customerID}
+        // selectedExhibition={selectedExhibition}
         handleRemoveFromCart={handleRemoveFromCart}
-        selectedExhibitionId={selectedExhibitionId}
-        customerName={customerName}
+        // selectedExhibitionId={selectedExhibitionId}
+        // customerName={customerName}
         // handlePrint={handlePrint}
       />
     

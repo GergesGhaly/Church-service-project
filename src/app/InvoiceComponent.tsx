@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import Select from "react-select";
 
 interface CartItem {
   id: number;
@@ -7,24 +8,87 @@ interface CartItem {
   quantity: number;
 }
 
+interface Customer {
+  id: string;
+  name: string;
+}
+
+interface Exhibition {
+  id: number;
+  name: string;
+}
+
 interface InvoiceProps {
   cart: CartItem[];
-  customerID: string;
-  selectedExhibition: string;
-  selectedExhibitionId: number | null;
-  customerName: string;
+  // customerID: string;
+  // selectedExhibition: string;
+  // selectedExhibitionId: number | null;
+  // customerName: string;
   handleRemoveFromCart: (productId: number) => void;
 }
 
 const InvoiceComponent: React.FC<InvoiceProps> = ({
   cart,
-  customerID,
-  selectedExhibition,
+  // customerID,
+  // selectedExhibition,
   handleRemoveFromCart,
-  selectedExhibitionId,
-  customerName,
+  // selectedExhibitionId,
+  // customerName,
 }) => {
   const [message, setMessage] = useState<string | null>(null);
+  const [selectedExhibition, setSelectedExhibition] = useState<string>("");
+  const [selectedExhibitionId, setSelectedExhibitionID] = useState<
+    number | null
+  >(null);
+  const [exhibitions, setExhibitions] = useState<Exhibition[]>([]);
+
+  const [, setLoading] = useState<boolean>(true);
+  const [, setError] = useState<string | null>(null);
+
+  const [customerName, setCustomerName] = useState<string>("");
+  const [customerID, setCustomerID] = useState<string>("");
+  const [customers, setCustomers] = useState<Customer[]>([]);
+
+  const fetchCustomers = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/Customers`
+      );
+      if (!response.ok) throw new Error("Failed to fetch customers");
+      const data: Customer[] = await response.json();
+      setCustomers(data);
+    } catch (err) {
+      console.error("Error fetching customers:", err);
+    }
+  };
+
+  const fetchExhibition = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/Gallery`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch Exhibition");
+      }
+      const data: Exhibition[] = await response.json();
+      setExhibitions(data);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message); // إذا كان الخطأ من النوع Error
+      } else {
+        setError("An unknown error occurred."); // في حال كان الخطأ من نوع غير معروف
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCustomers();
+    fetchExhibition();
+    // fetchProducts();
+  }, []);
 
   const handlePrint = async () => {
     setMessage(null);
@@ -81,10 +145,6 @@ const InvoiceComponent: React.FC<InvoiceProps> = ({
           const errorData = await itemResponse.json();
           throw new Error(errorData.message || "Failed to add Bill Item");
         }
-        console.log(
-          "api" +
-            `${process.env.NEXT_PUBLIC_API_URL}/Material/UpdateQuantity/${item.id}`
-        );
         // 🔄 تحديث كمية المنتج في المخزون
         const materialResponse = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/Material/UpdateQuantity/${item.id}`,
@@ -156,7 +216,52 @@ const InvoiceComponent: React.FC<InvoiceProps> = ({
 
   return (
     <div className="w-full max-w-2xl text-center">
-      <h1 className="text-2xl font-bold mt-10">Cart</h1>
+      <h1 className="text-2xl font-bold p-2">Info</h1>
+      <div className="flex justify-center gap-4 items-center">
+        <Select
+          options={customers?.map((customer) => ({
+            value: customer.name,
+            label: customer.name,
+            id: customer.id,
+          }))}
+          formatOptionLabel={(option) => (
+            <div className="flex flex-col w-1/3">
+              <span className="font-semibold">{option.label}</span>
+              <span className="text-gray-500 text-sm">{option.id}</span>
+            </div>
+          )}
+          isSearchable
+          placeholder="Select Customer Name"
+          onChange={(selectedOption) => {
+            setCustomerName(selectedOption?.value || "");
+            setCustomerID(selectedOption?.id || "");
+          }}
+          className="text-black"
+        />
+        {/* //Exhibition */}
+        <Select
+          options={exhibitions?.map((exhibition) => ({
+            value: exhibition.name,
+            label: exhibition.name,
+            id: exhibition.id,
+          }))}
+          formatOptionLabel={(option) => (
+            <div className="flex flex-col w-1/3">
+              <span className="font-semibold">{option.label}</span>
+              {/* <span className="text-gray-500 text-sm">{option.id}</span> */}
+            </div>
+          )}
+          isSearchable
+          placeholder="Select Exhibition Name"
+          onChange={(selectedOption) => {
+            setSelectedExhibition(selectedOption?.value || "");
+            setSelectedExhibitionID(selectedOption?.id || null);
+          }}
+          className="text-black"
+        />
+      </div>
+
+      <h1 className="text-2xl font-bold mt-10 p-2">Cart</h1>
 
       {message && (
         <p
