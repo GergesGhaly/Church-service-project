@@ -73,12 +73,17 @@ const UpdatePriceList: React.FC<UpdateProductProps> = ({
       );
 
       if (!response.ok) {
-        throw new Error("Failed to update product");
+        const errorData = await response.json();
+        const errorMessage = errorData.message || "Failed to update price list";
+        throw new Error(errorMessage);
       }
 
       setMessage("تم تحديث التواريخ بنجاح ✅");
       await fetchProducts(); // تحديث قائمة المنتجات
-      // setIsUpdateModalOpen(false);
+
+      // setLoading(false);
+
+      setIsUpdateModalOpen(false);
     } catch (err) {
       setMessage(
         "خطأ أثناء التحديث ❌: " +

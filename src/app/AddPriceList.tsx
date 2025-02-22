@@ -67,18 +67,16 @@ const AddPriceList: React.FC<AddPriceListProps> = ({
         }
       );
 
-      const responseData = await response.json();
       if (!response.ok) {
-        const errorMessage =
-          responseData.message ||
-          responseData.error ||
-          "Failed to add price list";
+        const errorData = await response.json();
+        const errorMessage = errorData.message || "Failed to add price list";
         throw new Error(errorMessage);
       }
 
       setMessage("Price list added successfully! ✅");
       setMaterialID("");
       setvalidFrom("");
+      setValidTo("");
       setBuyPrice("");
       setSellPrice("");
 

@@ -145,9 +145,7 @@ const handleRemoveProduct = async (id: number): Promise<void> => {
                 <th scope="col" className="px-6 py-3">
                   <span className="sr-only">ID</span>
                 </th>
-                {/* <th scope="col" className="px-16 py-3">
-                  <span className="sr-only">id</span>
-                </th> */}
+               
                 <th scope="col" className="px-6 py-3">
                   ma3rd
                 </th>

@@ -23,20 +23,19 @@ const AddPerson: React.FC<AddPersonProps> = ({
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [idError, setIdError] = useState<string | null>(null);
 
+  const fetchCustomers = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/Customers`
+      );
+      if (!response.ok) throw new Error("Failed to fetch customers");
+      const data: Customer[] = await response.json();
+      setCustomers(data);
+    } catch (err) {
+      console.error("Error fetching customers:", err);
+    }
+  };
   useEffect(() => {
-    const fetchCustomers = async () => {
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/Customers`
-        );
-        if (!response.ok) throw new Error("Failed to fetch customers");
-        const data: Customer[] = await response.json();
-        setCustomers(data);
-      } catch (err) {
-        console.error("Error fetching customers:", err);
-      }
-    };
-
     fetchCustomers();
   }, []);
 
@@ -79,6 +78,7 @@ const AddPerson: React.FC<AddPersonProps> = ({
       setRelativeId(null);
       setIdError(null);
       fetchPersons();
+      fetchCustomers();
     } catch (err) {
       console.error("Error:", err);
     } finally {

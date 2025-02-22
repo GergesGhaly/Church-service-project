@@ -4,7 +4,7 @@ import Select from "react-select";
 interface Person {
   id: string;
   name: string;
-  relativeID: string;
+  relativeID: string|null;
   relativeName: string;
 }
 
@@ -154,40 +154,43 @@ const UpdatePerson: React.FC<UpdatePersonProps> = ({
               Relative ID
             </label>
             <Select
-              options={customers.map((customer) => ({
-                value: customer.id,
-                label: customer.name,
-                id: customer.id, // الاحتفاظ بالـ ID للعرض
-              }))}
-              formatOptionLabel={(option) => (
-                <div className="flex flex-col">
-                  <span className="font-semibold">{option.label}</span>
-                  <span className="text-gray-500 text-sm">{option.id}</span>
-                </div>
-              )}
-              isSearchable
-              placeholder="Select Relative ID"
-              value={
-                person.relativeID
-                  ? {
-                      value: person.relativeID,
-                      label: person.relativeName,
-                      id: person.relativeID,
-                    }
-                  : null
-              }
-              onChange={(selectedOption) =>
-                selectedOption &&
-                setPerson((prev) => ({
-                  ...prev,
-                  relativeID: selectedOption.value,
-                  relativeName:
-                    customers.find((c) => c.id === selectedOption.value)
-                      ?.name || "",
-                }))
-              }
-              className="text-black"
-            />
+  options={[
+    { value: null, label: "غير معرف", id: "N/A" }, // الخيار المضاف يدويًا
+    ...customers.map((customer) => ({
+      value: customer.id,
+      label: customer.name,
+      id: customer.id,
+    })),
+  ]}
+  formatOptionLabel={(option) => (
+    <div className="flex flex-col">
+      <span className="font-semibold">{option.label}</span>
+      {option.id !== "N/A" && ( // إخفاء الـ ID إذا كان الخيار "غير معرف"
+        <span className="text-gray-500 text-sm">{option.id}</span>
+      )}
+    </div>
+  )}
+  isSearchable
+  placeholder="Select Relative ID"
+  value={
+    person.relativeID
+      ? {
+          value: person.relativeID,
+          label: person.relativeName,
+          id: person.relativeID,
+        }
+      : { value: null, label: "غير معرف", id: "N/A" } // القيمة الافتراضية إذا كان relativeID فارغًا
+  }
+  onChange={(selectedOption) =>
+    setPerson((prev) => ({
+      ...prev,
+      relativeID: selectedOption?.value || null, // تعيين null إذا كان الخيار هو "غير معرف"
+      relativeName:
+        customers.find((c) => c.id === selectedOption?.value)?.name || "",
+    }))
+  }
+  className="text-black"
+/>
           </div>
 
           <div className="flex justify-end">

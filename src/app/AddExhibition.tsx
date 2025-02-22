@@ -4,7 +4,10 @@ interface AddMa3rdProps {
   setIsModalOpen: (isOpen: boolean) => void;
   fetchProducts: () => Promise<void>;
 }
-const AddMa3rd: React.FC<AddMa3rdProps> = ({setIsModalOpen,fetchProducts}) => {
+const AddMa3rd: React.FC<AddMa3rdProps> = ({
+  setIsModalOpen,
+  fetchProducts,
+}) => {
   const [Ma3rdName, setMa3rdName] = useState<string>("");
   const [validFrom, setValidFrom] = useState<string>("");
   const [validTo, setValidTo] = useState<string>("");
@@ -23,16 +26,21 @@ const AddMa3rd: React.FC<AddMa3rdProps> = ({setIsModalOpen,fetchProducts}) => {
     };
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Gallery`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newProduct),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/Gallery`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(newProduct),
+        }
+      );
 
       if (!response.ok) {
-        throw new Error("Failed to add product");
+        const errorData = await response.json();
+        const errorMessage = errorData.message || "Failed to add product";
+        throw new Error(errorMessage);
       }
 
       setMessage("Product added successfully! ✅");
@@ -53,13 +61,19 @@ const AddMa3rd: React.FC<AddMa3rdProps> = ({setIsModalOpen,fetchProducts}) => {
       <div className="bg-black p-6 rounded-lg shadow-lg w-96">
         <h2 className="text-white text-lg font-bold mb-4">Add New Ma3rd</h2>
         {message && (
-          <p className={`mb-4 text-sm ${message.includes("✅") ? "text-green-500" : "text-red-500"}`}>
+          <p
+            className={`mb-4 text-sm ${
+              message.includes("✅") ? "text-green-500" : "text-red-500"
+            }`}
+          >
             {message}
           </p>
         )}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-white text-sm font-medium mb-1">Name</label>
+            <label className="block text-white text-sm font-medium mb-1">
+              Name
+            </label>
             <input
               type="text"
               className="w-full border border-gray-300 rounded-lg p-2"
@@ -70,7 +84,9 @@ const AddMa3rd: React.FC<AddMa3rdProps> = ({setIsModalOpen,fetchProducts}) => {
             />
           </div>
           <div className="mb-4">
-            <label className="block text-white text-sm font-medium mb-1">Valid From</label>
+            <label className="block text-white text-sm font-medium mb-1">
+              Valid From
+            </label>
             <input
               type="date"
               className="w-full border border-gray-300 rounded-lg p-2"
@@ -81,7 +97,9 @@ const AddMa3rd: React.FC<AddMa3rdProps> = ({setIsModalOpen,fetchProducts}) => {
           </div>
 
           <div className="mb-4">
-            <label className="block text-white text-sm font-medium mb-1">Valid To</label>
+            <label className="block text-white text-sm font-medium mb-1">
+              Valid To
+            </label>
             <input
               type="date"
               className="w-full border border-gray-300 rounded-lg p-2"
@@ -91,7 +109,6 @@ const AddMa3rd: React.FC<AddMa3rdProps> = ({setIsModalOpen,fetchProducts}) => {
             />
           </div>
 
-          
           <div className="flex justify-end">
             <button
               type="button"

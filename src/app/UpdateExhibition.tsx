@@ -76,11 +76,13 @@ const UpdateExhibition: React.FC<UpdateProductProps> = ({
       );
 
       if (!response.ok) {
-        throw new Error("Failed to update Exhibition");
+        const errorData = await response.json();
+        const errorMessage = errorData.message || "Failed to add product";
+        throw new Error(errorMessage);
       }
 
       setMessage("Exhibition updated successfully! ✅");
-      await fetchProducts(); // 
+      await fetchProducts(); //
       // Refresh the product list
       // setIsUpdateModalOpen(false);
     } catch (err) {
